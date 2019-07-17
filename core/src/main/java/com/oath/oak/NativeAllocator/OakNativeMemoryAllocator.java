@@ -108,6 +108,7 @@ public class OakNativeMemoryAllocator implements OakMemoryAllocator {
                 }
                 // does allocation of new block brings us out of capacity?
                 if ((numberOfBocks() + 1) * blocksProvider.blockSize() > capacity) {
+                  System.out.println("Oak is out of capacity: " + capacity/(1024*1024) + " MB");
                     throw new OakOutOfMemoryException();
                 } else {
                     // going to allocate additional block (big chunk of memory)
