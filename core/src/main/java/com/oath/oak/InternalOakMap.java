@@ -1054,7 +1054,7 @@ class InternalOakMap<K, V> {
     }
 
     class ValueIterator extends Iter<OakRBuffer> {
-
+        OakRBuffer oakRBuffer = new OakRValueBufferImpl(null);
         ValueIterator(K lo, boolean loInclusive, K hi, boolean hiInclusive, boolean isDescending) {
             super(lo, loInclusive, hi, hiInclusive, isDescending);
         }
@@ -1064,8 +1064,8 @@ class InternalOakMap<K, V> {
             Handle handle = advance().getValue();
             if (handle == null)
                 return null;
-
-            return new OakRValueBufferImpl(handle);
+            ((OakRValueBufferImpl)oakRBuffer).setHandle(handle);
+            return oakRBuffer;
         }
     }
 
