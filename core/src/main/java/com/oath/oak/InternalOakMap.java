@@ -1089,7 +1089,8 @@ class InternalOakMap<K, V> {
     }
 
     class EntryIterator extends Iter<Map.Entry<OakRBuffer, OakRBuffer>> {
-
+        OakRBuffer oakRBufferKey = new OakRKeyBufferImpl(null);
+        OakRBuffer oakRBufferVal = new OakRValueBufferImpl(null);
         EntryIterator(K lo, boolean loInclusive, K hi, boolean hiInclusive, boolean isDescending) {
             super(lo, loInclusive, hi, hiInclusive, isDescending);
         }
@@ -1099,9 +1100,10 @@ class InternalOakMap<K, V> {
             if (pair.getValue() == null) {
                 return null;
             }
+            ((OakRKeyBufferImpl)oakRBufferKey).setByteBuffer(pair.getKey());
+            ((OakRValueBufferImpl)oakRBufferVal).setHandle(pair.getValue());
             return new AbstractMap.SimpleImmutableEntry<>(
-                    new OakRKeyBufferImpl(pair.getKey()),
-                    new OakRValueBufferImpl(pair.getValue()));
+                    oakRBufferKey, oakRBufferVal);
         }
     }
 
@@ -1139,7 +1141,7 @@ class InternalOakMap<K, V> {
     }
 
     class KeyIterator extends Iter<OakRBuffer> {
-
+        OakRBuffer oakRBufferKey = new OakRKeyBufferImpl(null);
         KeyIterator(K lo, boolean loInclusive, K hi, boolean hiInclusive, boolean isDescending) {
             super(lo, loInclusive, hi, hiInclusive, isDescending);
         }
@@ -1148,7 +1150,8 @@ class InternalOakMap<K, V> {
         public OakRBuffer next() {
 
             Map.Entry<ByteBuffer, Handle> pair = advance();
-            return new OakRKeyBufferImpl(pair.getKey());
+            ((OakRKeyBufferImpl)oakRBufferKey).setByteBuffer(pair.getKey());
+            return oakRBufferKey;
 
         }
     }
