@@ -70,6 +70,7 @@ public class OakNativeMemoryAllocator implements OakMemoryAllocator {
         // this may lazy initialize the pool and take time if this is the first call for the pool
         allocateNewCurrentBlock();
         this.capacity = capacity;
+        System.out.println("OakNativeMemoryAllocator was constructed with capacity " + capacity/(1024*1024) + " MB");
     }
 
     @Override
@@ -191,9 +192,6 @@ public class OakNativeMemoryAllocator implements OakMemoryAllocator {
       int blockID = idGenerator.getAndIncrement();
       this.blocksArray[blockID] = b;
       this.currentBlock = b;
-      if (blockID%5==0) {
-        System.out.println("new block allocated");
-      }
     }
 
     private long numberOfBocks() {

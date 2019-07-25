@@ -27,6 +27,7 @@ class BlocksPool implements BlocksProvider {
     private final static int EXCESS_POOL_RATIO = 3;
     // not thread safe, private constructor; should be called only once
     private BlocksPool() {
+        System.out.println("Blocks pool was constructed allocating " + (NUMBER_OF_BLOCKS*BLOCK_SIZE)/(1024*1024) + " MB");
         prealloc(NUMBER_OF_BLOCKS);
     }
 
@@ -65,6 +66,7 @@ class BlocksPool implements BlocksProvider {
             if (noMoreBlocks || b == null) {
                 synchronized (BlocksPool.class) { // can be easily changed to lock-free
                     if (blocks.isEmpty()) {
+                        System.out.println("Blocks pool was required to allocate more " + (NUMBER_OF_BLOCKS*BLOCK_SIZE)/(2*(1024*1024)) + " MB");
                         prealloc(NUMBER_OF_BLOCKS / 2);
                     }
                 }
