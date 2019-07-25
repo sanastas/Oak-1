@@ -87,6 +87,7 @@ class BlocksPool implements BlocksProvider {
                 for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
                     this.blocks.poll().clean();
                 }
+                System.out.println("Blocks pool released " + (NUMBER_OF_BLOCKS)/(1024*1024) + " MB");
             }
         }
     }
