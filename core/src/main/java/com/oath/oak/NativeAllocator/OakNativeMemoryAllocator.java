@@ -165,6 +165,7 @@ public class OakNativeMemoryAllocator implements OakMemoryAllocator {
         }
         // no need to do anything with the free list,
         // as all free list members were residing on one of the (already released) blocks
+      System.out.println("OakNativeMemoryAllocator returned " + numberOfBocks() + " blocks to pool");
     }
 
     // Returns the off-heap allocation of this OakMap
