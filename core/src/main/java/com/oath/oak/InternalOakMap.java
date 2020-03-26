@@ -1005,6 +1005,7 @@ class InternalOakMap<K, V> {
         return EntrySet.keyRefToByteBuffer(keyReference, memoryManager);
     }
 
+
     private OakRKeyBuffer setKeyReference(long keyReference, OakRKeyBuffer key) {
         EntrySet.keyRefToOakRRef(keyReference, key);
         return key;
