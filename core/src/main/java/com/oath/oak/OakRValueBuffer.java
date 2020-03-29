@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 import static com.oath.oak.ValueUtils.ValueResult.*;
 
-public class OakRValueBufferImpl implements OakRBuffer, OakUnsafeDirectBuffer {
+public class OakRValueBuffer implements OakRBuffer, OakUnsafeDirectBuffer {
     /**
      * These are the fields used when accessing the value stored in this buffer (the reference to it in the off-heap,
      * and the version we expect the value to have.
@@ -40,7 +40,7 @@ public class OakRValueBufferImpl implements OakRBuffer, OakUnsafeDirectBuffer {
      */
     private final InternalOakMap<?, ?> internalOakMap;
 
-    OakRValueBufferImpl(long valueReference, int valueVersion, long keyReference, ValueUtils valueOperator,
+    OakRValueBuffer(long valueReference, int valueVersion, long keyReference, ValueUtils valueOperator,
                         MemoryManager memoryManager, InternalOakMap<?, ?> internalOakMap) {
         this.valueReference = valueReference;
         this.keyReference = keyReference;

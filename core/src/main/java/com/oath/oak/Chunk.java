@@ -248,10 +248,11 @@ public class Chunk<K, V> {
         return entrySet.readKey(ei);
     }
 
-    void setKeyReference(int ei, OakRKeyBuffer keyRef) {
+    void setRKeyBuffer(int ei, OakRKeyBuffer keyRef) {
         entrySet.setKeyOutputRBuff(ei, keyRef);
     }
 
+    // TODO: to change OakRKeyBuffer to OakRValueBuffer
     boolean setValueReference(int ei, OakRKeyBuffer valueRef) {
         return entrySet.setValueOutputRBuff(ei, valueRef);
     }

@@ -740,7 +740,7 @@ class InternalOakMap<K, V> {
                 continue;
             }
 
-            return new OakRValueBufferImpl(lookUp.valueReference, lookUp.version, lookUp.keyReference, valueOperator,
+            return new OakRValueBuffer(lookUp.valueReference, lookUp.version, lookUp.keyReference, valueOperator,
                     memoryManager, this);
         }
     }
@@ -1224,7 +1224,7 @@ class InternalOakMap<K, V> {
                 initAfterRebalance();
             }
             if (key != null) {
-                c.setKeyReference(state.getIndex(), key);
+                c.setRKeyBuffer(state.getIndex(), key);
             }
             // if there a reference to update (this if is not executed for KeyStreamIterator)
             if (value != null) {
@@ -1343,7 +1343,7 @@ class InternalOakMap<K, V> {
             long keyReference = myItem.keyReference;
             long valueReference = myItem.valueReference;
             int version = myItem.valueVersion;
-            return new OakRValueBufferImpl(valueReference, version, keyReference, valueOperator, memoryManager,
+            return new OakRValueBuffer(valueReference, version, keyReference, valueOperator, memoryManager,
                     internalOakMap);
         }
     }
@@ -1416,7 +1416,7 @@ class InternalOakMap<K, V> {
             long valueReference = myItem.valueReference;
             int version = myItem.valueVersion;
             return new AbstractMap.SimpleImmutableEntry<>(setKeyReference(keyReference,
-                    new OakRKeyBuffer(memoryManager, KEY_HEADER_SIZE)), new OakRValueBufferImpl(valueReference,
+                    new OakRKeyBuffer(memoryManager, KEY_HEADER_SIZE)), new OakRValueBuffer(valueReference,
                     version, keyReference, valueOperator, memoryManager, internalOakMap));
         }
     }
