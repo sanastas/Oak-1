@@ -1177,9 +1177,10 @@ class InternalOakMap<K, V> {
                     if (value.buffer.getAllocatedBlockID() == ctx.valueBlockID) {
                         // update just offset
                         value.buffer.setOffset(ctx.valueOffset);
+                    } else {
+                        // If the current value is deleted, then advance and try again
+                        validState = c.readValueFromEntryIndex(value.buffer, curIndex);
                     }
-                    // If the current value is deleted, then advance and try again
-                    validState = c.readValueFromEntryIndex(value.buffer, curIndex);
                 }
 
                 advanceState();
