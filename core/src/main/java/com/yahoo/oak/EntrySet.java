@@ -304,6 +304,21 @@ class EntrySet<K, V> {
         return getEntryArrayFieldInt(entryIdx2intIdx(ei), OFFSET.NEXT);
     }
 
+    int getKeyOffset(int ei) {
+        long keyReference = getKeyReference(ei);
+        return ((NoFreeMemoryManager) keysMemoryManager).getOffsetFromReference(keyReference);
+    }
+
+    int getValueOffset(int ei) {
+        long valueReference = getValueReference(ei);
+        return ((NativeMemoryManager) valuesMemoryManager).getOffsetFromReference(valueReference);
+    }
+
+    int getValueBlockID(int ei) {
+        long valueReference = getValueReference(ei);
+        return ((NativeMemoryManager) valuesMemoryManager).getBlockIDFromReference(valueReference);
+    }
+
     /**
      * getHeadEntryIndex returns the entry index of the entry first in the array,
      * which is written in the first integer of the array
@@ -374,7 +389,6 @@ class EntrySet<K, V> {
         }
 
         long reference = getValueReference(ei);
-        value.setReference(reference);
         return valuesMemoryManager.decodeReference(value, reference);
     }
 

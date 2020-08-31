@@ -59,12 +59,21 @@ class NativeMemoryManager implements MemoryManager {
      */
     @Override
     public boolean decodeReference(Slice s, long reference) {
+        s.setReference(reference);
         if (rcmm.decode(s, reference)) {
             allocator.readByteBuffer(s);
             ValueUtilsImpl.setLengthFromOffHeap(s);
             return true;
         }
         return false;
+    }
+
+    int getOffsetFromReference(long reference) {
+        return rcmm.getOffsetFromReference(reference);
+    }
+
+    int getBlockIDFromReference(long reference) {
+        return rcmm.getBlockIDFromReference(reference);
     }
 
     /**

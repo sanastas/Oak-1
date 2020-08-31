@@ -93,6 +93,10 @@ class Slice implements OakUnsafeDirectBuffer, Comparable<Slice> {
         valid = false;
     }
 
+    void setOffset(int offset) {
+        this.offset = offset;
+    }
+
     /*
      * Updates the offset, length and version of the slice
      * The buffer and its blockID should be set later by the block allocator (via setBufferAndBlockID).

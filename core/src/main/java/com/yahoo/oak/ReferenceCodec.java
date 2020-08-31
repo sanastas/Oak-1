@@ -190,7 +190,6 @@ abstract class ReferenceCodec {
         return !isReferenceDeleted(reference);
     }
 
-
     private long encode(long first, long second, long third) {
         // These checks validates that the chosen encoding is sufficient for the current use-case.
         if ((first & ~firstMask) != 0 || (second & ~secondMask) != 0 || (third & ~thirdMask) != 0 ) {

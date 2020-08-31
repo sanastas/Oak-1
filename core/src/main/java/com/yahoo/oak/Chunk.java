@@ -788,6 +788,9 @@ class Chunk<K, V> {
         @Override
         public int next(ThreadContext ctx) {
             int toReturn = next;
+            ctx.keyOffset = entrySet.getKeyOffset(next);
+            ctx.valueOffset = entrySet.getValueOffset(next);
+            ctx.valueBlockID = entrySet.getValueBlockID(next);
             advance();
             return toReturn;
         }

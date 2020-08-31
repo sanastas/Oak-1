@@ -72,6 +72,10 @@ class NoFreeMemoryManager implements MemoryManager {
         return false;
     }
 
+    int getOffsetFromReference(long reference) {
+        return rcd.getOffsetFromReference(reference);
+    }
+
     /**
      * @param s the memory slice, encoding of which should be returned as a an output long reference
      * @return the encoded reference

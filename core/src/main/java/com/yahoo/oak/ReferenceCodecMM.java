@@ -100,6 +100,14 @@ class ReferenceCodecMM extends ReferenceCodec{
         return (v!=INVALID_VERSION);
     }
 
+    int getOffsetFromReference(long reference) {
+        return getSecond(reference);
+    }
+
+    int getBlockIDFromReference(long reference) {
+        return getFirst(reference);
+    }
+
     @Override
     boolean isReferenceDeleted(long reference) {
         return isVersionDeleted(getThird(reference));

@@ -954,11 +954,18 @@ class InternalOakMap<K, V> {
         private Chunk<K, V> chunk;
         private Chunk.ChunkIter chunkIter;
         private int index;
+        private int keyOffset = -1;
+        private int valueOffset = -1;
+        private int valueBlockID = NativeMemoryAllocator.INVALID_BLOCK_ID;
 
-        public void set(Chunk<K, V> chunk, Chunk.ChunkIter chunkIter, int index) {
+        public void set(Chunk<K, V> chunk, Chunk.ChunkIter chunkIter, int index, int keyOffset,
+            int valueOffset, int valueBlockID) {
             this.chunk = chunk;
             this.chunkIter = chunkIter;
             this.index = index;
+            this.keyOffset = keyOffset;
+            this.valueOffset = valueOffset;
+            this.valueBlockID = valueBlockID;
         }
 
         private IteratorState(Chunk<K, V> nextChunk, Chunk.ChunkIter nextChunkIter, int nextIndex) {
@@ -1167,6 +1174,10 @@ class InternalOakMap<K, V> {
                 }
 
                 if (value != null) {
+                    if (value.buffer.getAllocatedBlockID() == ctx.valueBlockID) {
+                        // update just offset
+                        value.buffer.setOffset(ctx.valueOffset);
+                    }
                     // If the current value is deleted, then advance and try again
                     validState = c.readValueFromEntryIndex(value.buffer, curIndex);
                 }
@@ -1248,7 +1259,8 @@ class InternalOakMap<K, V> {
             }
 
             int nextIndex = chunkIter.next(ctx);
-            state.set(chunk, chunkIter, nextIndex);
+            state.set(chunk, chunkIter, nextIndex, ctx.keyOffset, ctx.valueOffset,
+                ctx.valueBlockID);
 
             // The boundary check is costly and need to be performed only when required,
             // meaning not on the full scan.

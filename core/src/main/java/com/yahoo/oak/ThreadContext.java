@@ -55,6 +55,13 @@ class ThreadContext {
     final KeyBuffer tempKey;
     final ValueBuffer tempValue;
 
+    /*-----------------------------------------------------------
+     * For stream iteration
+     *-----------------------------------------------------------*/
+    int keyOffset;
+    int valueOffset;
+    int valueBlockID;
+
     ThreadContext(ValueUtils valueOperator) {
         entryIndex = EntrySet.INVALID_ENTRY_INDEX;
         valueState = EntrySet.ValueState.UNKNOWN;

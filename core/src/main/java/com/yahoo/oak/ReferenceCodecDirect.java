@@ -99,6 +99,10 @@ class ReferenceCodecDirect extends ReferenceCodec {
         return true;
     }
 
+    int getOffsetFromReference(long reference) {
+        return getSecond(reference);
+    }
+
     static long getInvalidReference() {
         return INVALID_DIRECT_REFERENCE;
     }
