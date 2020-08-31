@@ -285,8 +285,9 @@ class EntrySet<K, V> {
      * */
     boolean isValueRefValidAndNotDeleted(int ei) {
         long valRef = getValueReference(ei);
-        return valuesMemoryManager.isReferenceValid(valRef)
-            && !valuesMemoryManager.isReferenceDeleted(valRef);
+        return ((NativeMemoryManager) valuesMemoryManager).isReferenceValidAndNotDeleted(valRef);
+//        return valuesMemoryManager.isReferenceValid(valRef)
+//            && !valuesMemoryManager.isReferenceDeleted(valRef);
     }
 
     /********************************************************************************************/

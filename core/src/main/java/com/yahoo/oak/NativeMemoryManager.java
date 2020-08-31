@@ -92,6 +92,10 @@ class NativeMemoryManager implements MemoryManager {
         return rcmm.isReferenceValid(reference);
     }
 
+    boolean isReferenceValidAndNotDeleted(long reference) {
+        return rcmm.isReferenceValidAndNotDeleted(reference);
+    }
+
     @Override
     public boolean isReferenceDeleted(long reference) {
         return rcmm.isReferenceDeleted(reference);

@@ -102,12 +102,24 @@ class ReferenceCodecMM extends ReferenceCodec{
 
     @Override
     boolean isReferenceDeleted(long reference) {
-        return isVersionDeleted((int) getThird(reference));
+        return isVersionDeleted(getThird(reference));
+    }
+
+    boolean isReferenceValidAndNotDeleted(long reference) {
+        if (reference == INVALID_MM_REFERENCE) {
+            return false;
+        }
+        return isVersionNotDeleted(getThird(reference));
     }
 
     private boolean isVersionDeleted(int v) {
-        int vv = (int) ((long) v & VERSION_DELETE_BIT_MASK);
+        int vv = (int) ((long) v & VERSION_DELETE_BIT_MASK); // get the value of the deleted bit
         return (vv!=INVALID_VERSION);
+    }
+
+    private boolean isVersionNotDeleted(int v) {
+        int vv = (int) ((long) v & VERSION_DELETE_BIT_MASK); // get the value of the deleted bit
+        return (vv==INVALID_VERSION);
     }
 
     static long getInvalidReference() {
