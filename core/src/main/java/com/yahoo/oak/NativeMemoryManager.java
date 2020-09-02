@@ -62,7 +62,10 @@ class NativeMemoryManager implements MemoryManager {
         s.setReference(reference);
         if (rcmm.decode(s, reference)) {
             allocator.readByteBuffer(s);
-            ValueUtilsImpl.setLengthFromOffHeap(s);
+//            if (s.getAllocatedBlockID() != NativeMemoryAllocator.INVALID_BLOCK_ID) {
+//                return true;
+//            }
+//            ValueUtilsImpl.setLengthFromOffHeap(s);
             return true;
         }
         return false;

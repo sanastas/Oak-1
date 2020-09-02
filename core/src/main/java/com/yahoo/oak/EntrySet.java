@@ -372,9 +372,6 @@ class EntrySet<K, V> {
             return false;
         }
         long reference = getValueReference(ei);
-        if (value.getAllocatedBlockID() != NativeMemoryAllocator.INVALID_BLOCK_ID) {
-            return true;
-        }
         return valuesMemoryManager.decodeReference(value, reference);
     }
 
