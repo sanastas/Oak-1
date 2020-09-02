@@ -112,7 +112,7 @@ public class OakMapBuilder<K, V> {
         if (minKey == null) {
             throw new IllegalStateException("Must provide a non-null minimal key object to build the OakMap");
         }
-        System.out.println("\n--- BUILDING OAK MAP V0.4! ---\n");
+        System.out.println("\n--- BUILDING OAK MAP V0.5! ---\n");
         return new OakMap<>(
                 minKey,
                 keySerializer,
