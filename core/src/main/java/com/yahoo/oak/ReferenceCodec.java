@@ -214,9 +214,9 @@ abstract class ReferenceCodec {
     }
 
     protected int getSecond(final long reference) {
-        return  (int) ((reference >>> secondShift) & secondMask);
+        return  (int) ((reference >>> secondShift) /*& secondMask*/);
     }
     protected int getThird(final long reference) {
-        return  (int) ((reference >>> thirdShift) & thirdMask);
+        return  (int) ((reference >>> thirdShift) /*& thirdMask*/);
     }
 }
