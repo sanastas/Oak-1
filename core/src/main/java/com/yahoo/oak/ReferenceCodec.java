@@ -182,9 +182,12 @@ abstract class ReferenceCodec {
             return false;
         }
 
-        int first  = getFirst(reference);
-        int second = getSecond(reference);
-        int third  = getThird(reference);
+        long r = reference;
+        int first  = (int) (r & firstMask);
+        r = r >>> firstBitSize;
+        int second = (int) (r & secondMask);
+        r = r >>> secondBitSize;
+        int third  =  (int) (r & thirdMask);
 
         setAll(s, first, second, third);
         return !isReferenceDeleted(reference);
