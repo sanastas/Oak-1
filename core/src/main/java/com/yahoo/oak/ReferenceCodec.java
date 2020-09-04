@@ -183,7 +183,7 @@ abstract class ReferenceCodec {
         }
 
         long r = reference;
-        int first  = (int) (r & firstMask);
+        int first  = (int) (r & firstMask); // didn't show improvement
         r = r >>> firstBitSize;
         int second = (int) (r & secondMask);
         r = r >>> secondBitSize;

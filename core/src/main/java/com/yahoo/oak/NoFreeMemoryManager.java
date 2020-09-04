@@ -65,6 +65,10 @@ class NoFreeMemoryManager implements MemoryManager {
      */
     @Override
     public boolean decodeReference(Slice s, long reference) {
+        if (s.getAllocatedBlockID() == rcd.getFirst(reference)) {
+            s.setOffset(rcd.getSecond(reference));
+            return true;
+        }
         if (rcd.decode(s, reference)) {
             allocator.readByteBuffer(s);
             return true;
