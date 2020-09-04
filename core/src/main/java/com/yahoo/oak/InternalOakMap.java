@@ -728,6 +728,7 @@ class InternalOakMap<K, V> {
     boolean refreshValuePosition(ThreadContext ctx) {
         K deserializedKey = keySerializer.deserialize(ctx.key);
         Chunk<K, V> c = findChunk(deserializedKey); // find chunk matching key
+        ctx.tempKey.invalidate();
         c.lookUp(ctx, deserializedKey);
         return ctx.isValueValid();
     }

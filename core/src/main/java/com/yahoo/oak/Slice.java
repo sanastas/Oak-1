@@ -90,7 +90,7 @@ class Slice implements OakUnsafeDirectBuffer, Comparable<Slice> {
         this.blockID = blockID;
         this.offset = offset;
         this.length = length;
-        valid = false;
+        valid = true;
     }
 
     /*

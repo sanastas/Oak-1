@@ -60,8 +60,12 @@ class NativeMemoryManager implements MemoryManager {
     @Override
     public boolean decodeReference(Slice s, long reference) {
         s.setReference(reference);
+        int oldBloclID = s.getAllocatedBlockID();
         if (rcmm.decode(s, reference)) {
-            allocator.readByteBuffer(s);
+            if (oldBloclID == NativeMemoryAllocator.INVALID_BLOCK_ID
+                || oldBloclID != rcmm.getFirst(reference)) {
+                allocator.readByteBuffer(s);
+            }
             return true;
         }
         return false;

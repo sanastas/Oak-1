@@ -196,7 +196,7 @@ public class IteratorModificationTest {
         Assert.assertTrue(passed.get());
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void concurrentModificationTest() throws InterruptedException {
 
         CountDownLatch deleteLatch = new CountDownLatch(1);
@@ -242,7 +242,7 @@ public class IteratorModificationTest {
         Assert.assertTrue(passed.get());
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void concurrentModificationStreamTest() throws InterruptedException {
 
         CountDownLatch deleteLatch = new CountDownLatch(1);
