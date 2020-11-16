@@ -252,6 +252,14 @@ class Chunk<K, V> {
         return comparator.compareKeyAndSerializedKey(key, tempKeyBuff);
     }
 
+    /* Same as compareKeyAndEntryIndex, just gets the input key as a slice for read only
+    * For comparison the buffer is used. The Slice must be of the same buffer. */
+    int compareKeyAsSliceAndEntryIndex(Slice tempKeySlice, KeyBuffer tempKeyBuff, K key, int ei) {
+        boolean isAllocated = entrySet.readKeyAsSlice(tempKeySlice, ei);
+        assert isAllocated;
+        return comparator.compareKeyAndSerializedKey(key, tempKeyBuff);
+    }
+
     /**
      * Look up a key in this chunk.
      *
@@ -274,15 +282,17 @@ class Chunk<K, V> {
      * @param key the key to look up
      */
     void lookUp(ThreadContext ctx, K key) {
+        Slice tempKeySlice = ctx.tempKey.getSlice();
         // binary search sorted part of key array to quickly find node to start search at
         // it finds previous-to-key
-        int curr = binaryFind(ctx.tempKey, key);
+        int curr = binaryFind(ctx.tempKey, key, tempKeySlice);
         curr = (curr == NONE_NEXT) ? entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(curr);
 
         // iterate until end of list (or key is found)
         while (curr != NONE_NEXT) {
+            Slice keySlice = ctx.key.getSlice();
             // compare current item's key to searched key
-            int cmp = compareKeyAndEntryIndex(ctx.key, key, curr);
+            int cmp = compareKeyAsSliceAndEntryIndex(keySlice, ctx.key, key, curr);
             // if item's key is larger - we've exceeded our key
             // it's not in chunk - no need to search further
             if (cmp < 0) {
@@ -309,6 +319,7 @@ class Chunk<K, V> {
      *
      * @param tempKey a reusable buffer object for internal temporary usage
      * @param key     the key to look up
+     * @param tempKeySlice must be the slice of the tempKey
      * @return the index of the entry from which to start a linear search -
      * if key is found, its previous entry is returned!
      * In cases when search from the head is needed, meaning:
@@ -316,7 +327,7 @@ class Chunk<K, V> {
      * (2) entries are unsorted so there is a need to start from the beginning of the linked list
      * NONE_NEXT is going to be returned
      */
-    private int binaryFind(KeyBuffer tempKey, K key) {
+    private int binaryFind(KeyBuffer tempKey, K key, Slice tempKeySlice) {
         int sortedCount = this.sortedCount.get();
         // if there are no sorted keys, return NONE_NEXT to indicate that a regular linear search is needed
         if (sortedCount == 0) {
@@ -325,12 +336,12 @@ class Chunk<K, V> {
 
         // if the first item is already larger than key,
         // return NONE_NEXT to indicate that a regular linear search is needed
-        if (compareKeyAndEntryIndex(tempKey, key, entrySet.getHeadNextIndex()) <= 0) {
+        if (compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKey, key, entrySet.getHeadNextIndex()) <= 0) {
             return NONE_NEXT;
         }
 
         // optimization: compare with last key to avoid binary search (here sortedCount is not zero)
-        if (compareKeyAndEntryIndex(tempKey, key, sortedCount) > 0) {
+        if (compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKey, key, sortedCount) > 0) {
             return sortedCount;
         }
 
@@ -338,7 +349,7 @@ class Chunk<K, V> {
         int end = sortedCount;
         while (end - start > 1) {
             int curr = start + (end - start) / 2;
-            if (compareKeyAndEntryIndex(tempKey, key, curr) <= 0) {
+            if (compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKey, key, curr) <= 0) {
                 end = curr;
             } else {
                 start = curr;
@@ -422,10 +433,11 @@ class Chunk<K, V> {
         int anchor = INVALID_ANCHOR_INDEX;
         final int ei = ctx.entryIndex;
         final KeyBuffer tempKeyBuff = ctx.tempKey;
+        Slice tempKeySlice = tempKeyBuff.getSlice();
         while (true) {
             // start iterating from quickly-found node (by binary search) in sorted part of order-array
             if (anchor == INVALID_ANCHOR_INDEX) {
-                anchor = binaryFind(tempKeyBuff, key);
+                anchor = binaryFind(tempKeyBuff, key, tempKeySlice);
             }
             if (anchor == NONE_NEXT) {
                 prev = NONE_NEXT;
@@ -444,7 +456,7 @@ class Chunk<K, V> {
                     break;
                 }
                 // compare current item's key to ours
-                cmp = compareKeyAndEntryIndex(tempKeyBuff, key, curr);
+                cmp = compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKeyBuff, key, curr);
 
                 // if current item's key is larger, done searching - add between prev and curr
                 if (cmp < 0) {
@@ -760,17 +772,18 @@ class Chunk<K, V> {
 
         AscendingIter(ThreadContext ctx, K from, boolean inclusive) {
             KeyBuffer tempKeyBuff = ctx.tempKey;
-            next = binaryFind(tempKeyBuff, from);
+            Slice tempKeySlice = tempKeyBuff.getSlice();
+            next = binaryFind(tempKeyBuff, from, tempKeySlice);
             next = (next == NONE_NEXT) ? entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(next);
             int compare = -1;
             if (next != NONE_NEXT) {
-                compare = compareKeyAndEntryIndex(tempKeyBuff, from, next);
+                compare = compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKeyBuff, from, next);
             }
             while (next != NONE_NEXT &&
                     (compare > 0 || (compare >= 0 && !inclusive) || !entrySet.isValueRefValidAndNotDeleted(next))) {
                 next = entrySet.getNextEntryIndex(next);
                 if (next != NONE_NEXT) {
-                    compare = compareKeyAndEntryIndex(tempKeyBuff, from, next);
+                    compare = compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKeyBuff, from, next);
                 }
             }
         }
@@ -822,7 +835,7 @@ class Chunk<K, V> {
             this.from = from;
             this.inclusive = inclusive;
             stack = new IntStack(entrySet.getLastEntryIndex());
-            anchor = binaryFind(tempKeyBuff, from);
+            anchor = binaryFind(tempKeyBuff, from, tempKeyBuff.getSlice());
             // translate to be valid index, if anchor is head we know to stop the iteration
             anchor = (anchor == NONE_NEXT) ? entrySet.getHeadNextIndex() : anchor;
             stack.push(anchor);
@@ -886,11 +899,13 @@ class Chunk<K, V> {
                 pushToStack(!firstTimeInvocation);
             } else {
                 if (firstTimeInvocation) {
+                    Slice tempKeySlice = tempKeyBuff.getSlice();
                     final int threshold = inclusive ? -1 : 0;
                     // This is equivalent to continue while:
                     //         when inclusive: CMP >= 0
                     //     when non-inclusive: CMP > 0
-                    while (next != NONE_NEXT && compareKeyAndEntryIndex(tempKeyBuff, from, next) > threshold) {
+                    while (next != NONE_NEXT &&
+                        compareKeyAsSliceAndEntryIndex(tempKeySlice, tempKeyBuff, from, next) > threshold) {
                         stack.push(next);
                         next = entrySet.getNextEntryIndex(next);
                     }

@@ -327,6 +327,17 @@ class EntrySet<K, V> {
         return keysMemoryManager.decodeReference(key.getSlice(), reference);
     }
 
+    /* Same as readKey, just gets the input key as a slice */
+    boolean readKeyAsSlice(Slice key, int ei) {
+        if (ei == INVALID_ENTRY_INDEX) {
+            key.invalidate();
+            return false;
+        }
+
+        long reference = getKeyReference(ei);
+        return keysMemoryManager.decodeReference(key, reference);
+    }
+
     /**
      * Reads a value from entry at the given entry index (from off-heap).
      * Returns false if:
