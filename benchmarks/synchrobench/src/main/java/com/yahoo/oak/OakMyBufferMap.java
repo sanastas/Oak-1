@@ -105,12 +105,12 @@ public class OakMyBufferMap<K extends MyBuffer, V extends MyBuffer> implements C
         Iterator iter;
         if (Parameters.zeroCopy) {
             if (Parameters.streamIteration) {
-                iter = subMap.zc().entryStreamSet().iterator();
+                iter = subMap.zc().keyStreamSet().iterator();
             } else {
-                iter = subMap.zc().entrySet().iterator();
+                iter = subMap.zc().keySet().iterator();
             }
         } else {
-            iter = subMap.entrySet().iterator();
+            iter = subMap.keySet().iterator();
         }
 
         return iterate(iter, length);
