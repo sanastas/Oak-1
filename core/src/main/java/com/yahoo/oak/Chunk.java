@@ -765,18 +765,21 @@ class Chunk<K, V> {
         private boolean needBoundCheckStatic; // to check the boundaries somewhere in this chunk?
         private boolean needBoundCheckDynamic = false; // to check the boundaries on each advancing?
         private int midIdx = sortedCount.get()/2; // approximately index of the middle key in the chunk
+        private final IntQueue queue;
 
         AscendingIter(ThreadContext ctx, K to, boolean toInclusive,
             OakScopedReadBuffer upperBoundKey) {
+            queue = new IntQueue(maxItems); // initializing to maximum in case the size is growing during scan
             setUpperBoundChecks(ctx, to, toInclusive, upperBoundKey);
             next = entrySet.getHeadNextIndex();
             next = advanceNextIndex(next, ctx);
+            fillQueue(ctx);
         }
 
         AscendingIter(ThreadContext ctx, K from, boolean fromInclusive, K to, boolean toInclusive,
             OakScopedReadBuffer upperBoundKey) {
             KeyBuffer tempKeyBuff = ctx.tempKey;
-
+            queue = new IntQueue(maxItems); // initializing to maximum in case the size is growing during scan
             next = binaryFind(tempKeyBuff, from);
             if (next >= midIdx) { // binaryFind output is always less than sorted Count; or NONE_NEXT (0)
                 midIdx = -1; // midIdx is not in the scope of this scan (too low)
@@ -800,11 +803,17 @@ class Chunk<K, V> {
             // (too low); and also whether current next is already out of bound.
             // So setUpperBoundChecks can be invoked only after the above check
             setUpperBoundChecks(ctx, to, toInclusive, upperBoundKey);
+            fillQueue(ctx);
         }
 
         private void advance(ThreadContext ctx) {
-            next = entrySet.getNextEntryIndex(next);
-            next = advanceNextIndex(next, ctx);
+            if (queue.isEmpty()) {
+                next = NONE_NEXT;
+                return;
+            }
+            next = queue.remove();
+          //  next = entrySet.getNextEntryIndex(next);
+          //  next = advanceNextIndex(next, ctx);
         }
 
         @Override
@@ -891,6 +900,17 @@ class Chunk<K, V> {
                 needBoundCheckStatic = false; // needBoundCheckDynamic is false by default
             }
         }
+
+        void fillQueue(ThreadContext ctx) {
+            int currentIdx = next;
+          //  queue.add(currentIdx);
+            while (currentIdx != NONE_NEXT) {
+                int nextIdx = entrySet.getNextEntryIndex(currentIdx);
+                nextIdx = advanceNextIndex(nextIdx, ctx);
+                queue.add(nextIdx);
+                currentIdx = nextIdx;
+            }
+        }
     }
 
     class DescendingIter implements ChunkIter {
@@ -914,7 +934,7 @@ class Chunk<K, V> {
             KeyBuffer tempKeyBuff = ctx.tempKey;
             setLowerBoundChecks(ctx, to, toInclusive);
             from = null;
-            stack = new IntStack(entrySet.getLastEntryIndex());
+            stack = new IntStack(maxItems); // initializing to maximum in case the size is growing during scan
             int sortedCnt = sortedCount.get();
             anchor = // this is the last sorted entry
                     (sortedCnt == 0 ? entrySet.getHeadNextIndex() : sortedCnt);
@@ -927,7 +947,7 @@ class Chunk<K, V> {
 
             this.from = from;
             this.inclusive = inclusive;
-            stack = new IntStack(entrySet.getLastEntryIndex());
+            stack = new IntStack(maxItems); // initializing to maximum in case the size is growing during scan
             anchor = binaryFind(tempKeyBuff, from);
 
             if (anchor <= midIdx) { // binaryFind output is always less than sorted Count; or NONE_NEXT
@@ -1151,6 +1171,68 @@ class Chunk<K, V> {
             return top;
         }
 
+    }
+
+    static class IntQueue {
+        private final int[] queue;
+        private int first = 0;
+        private int last = 0;
+        private int size = 0;
+
+        IntQueue(int size) {
+            queue = new int[size];
+        }
+
+        boolean isEmpty() {
+            return size == 0;
+        }
+
+        boolean isFull() {
+            return size == queue.length;
+        }
+
+        void add(int element) { // addLast
+            if (isFull()) {
+                throw new RuntimeException("Queue is full");
+            }
+            queue[last] = element;
+            size++;
+            last = (last + 1) % queue.length;
+        }
+
+        int remove() { // removeFirst
+            if (isEmpty()) {
+                throw new RuntimeException("Queue is empty");
+            }
+            int element = queue[first];
+            first = (first + 1) % queue.length;
+            size--;
+            return element;
+        }
+
+        int peek() { // getFirst
+            if (isEmpty()) {
+                throw new RuntimeException("Queue is empty");
+            }
+            return queue[first];
+        }
+
+        boolean isExists(int element) {
+            if (first < last) {
+                return isExists(element, first, last);
+            } else {
+                return isExists(element, first, size - 1) || isExists(element, 0, last);
+            }
+        }
+
+        boolean isExists(int element, int start, int end) {
+            for (int i = start; i <= end; i++) {
+                if (queue[i] == element) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     /*-------------- Statistics --------------*/
