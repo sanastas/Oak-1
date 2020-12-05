@@ -802,13 +802,13 @@ class Chunk<K, V> {
         private final K from;
         private boolean inclusive;
 
-        static final int SKIP_ENTRIES_FOR_BIGGER_STACK = 1; // 1 is the lowest possible value
+        private final int skipEntriesForBiggerStack = (maxItems/4); // 1 is the lowest possible value
 
         DescendingIter(ThreadContext ctx) {
             KeyBuffer tempKeyBuff = ctx.tempKey;
 
             from = null;
-            stack = new IntStack(entrySet.getLastEntryIndex());
+            stack = new IntStack(maxItems); // for the case chunk is growing
             int sortedCnt = sortedCount.get();
             anchor = // this is the last sorted entry
                     (sortedCnt == 0 ? entrySet.getHeadNextIndex() : sortedCnt);
@@ -821,7 +821,7 @@ class Chunk<K, V> {
 
             this.from = from;
             this.inclusive = inclusive;
-            stack = new IntStack(entrySet.getLastEntryIndex());
+            stack = new IntStack(maxItems); // for the case chunk is growing
             anchor = binaryFind(tempKeyBuff, from);
             // translate to be valid index, if anchor is head we know to stop the iteration
             anchor = (anchor == NONE_NEXT) ? entrySet.getHeadNextIndex() : anchor;
@@ -913,12 +913,12 @@ class Chunk<K, V> {
             } else if (anchor == 1) { // cannot get below the first index
                 anchor = entrySet.getHeadNextIndex();
             } else {
-                if ((anchor - SKIP_ENTRIES_FOR_BIGGER_STACK) > 1) {
+                if ((anchor - skipEntriesForBiggerStack) > 1) {
                     // try to skip more then one backward step at a time
                     // if it shows better performance
-                    anchor -= SKIP_ENTRIES_FOR_BIGGER_STACK;
+                    anchor -= skipEntriesForBiggerStack;
                 } else {
-                    anchor -= 1;
+                    anchor = entrySet.getHeadNextIndex();
                 }
             }
             stack.push(anchor);
