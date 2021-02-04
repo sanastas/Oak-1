@@ -16,6 +16,9 @@ class ThreadContext {
     /* The index of the key's entry in EntrySet */
     int entryIndex;
 
+    /* The index of the highest key smaller than the given key, if found in lookup */
+    int prevEntryIndex;
+
     /* key is used for easier access to the off-heap memory */
     final KeyBuffer key;
 
