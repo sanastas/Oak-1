@@ -274,10 +274,10 @@ class Chunk<K, V> {
     void lookUp(ThreadContext ctx, K key) {
         // binary search sorted part of key array to quickly find node to start search at
         // it finds previous-to-key
-        int curr = binaryFind(ctx.tempKey, key);
-        curr = (curr == NONE_NEXT) ? entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(curr);
-        int prev = NONE_NEXT;
-        ctx.prevEntryIndex = NONE_NEXT;
+        ctx.prevEntryIndex = binaryFind(ctx.tempKey, key);
+        // if prevEntryIndex is irrelevant it is going to be NONE_NEXT
+        int curr = (ctx.prevEntryIndex == NONE_NEXT) ?
+            entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(ctx.prevEntryIndex);
 
         // iterate until end of list (or key is found)
         while (curr != NONE_NEXT) {
@@ -293,15 +293,14 @@ class Chunk<K, V> {
                 // Updates the entry's context
                 // ctx.key was already updated as a side effect of compareKeyAndEntryIndex()
                 ctx.entryIndex = curr;
-                ctx.prevEntryIndex = prev; // if prev index is irrelevant it is going to be NONE_NEXT
                 entrySet.readValue(ctx);
                 return;
             }
+            ctx.prevEntryIndex = curr; // remeber one before current
             // otherwise- proceed to next item
             curr = entrySet.getNextEntryIndex(curr);
-            prev = curr;
-        }
 
+        }
         // Reset entry context to be INVALID
         ctx.invalidate();
     }
@@ -485,10 +484,6 @@ class Chunk<K, V> {
                             // compare with sorted count key, if inserting the "if-statement",
                             // the sorted count key is less or equal to the key just inserted
                             this.sortedCount.compareAndSet(sortedCount, (sortedCount + 1));
-//                            System.out.print(" <SC changed from " + (sortedCount-1)
-//                                + " to " + sortedCount + "> ");
-//                        } else {
-//                            System.out.print(" <Entry inserted after SC> ");
                         }
                     }
                 }
