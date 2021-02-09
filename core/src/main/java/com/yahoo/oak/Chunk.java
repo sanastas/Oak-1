@@ -429,6 +429,8 @@ class Chunk<K, V> {
             if (ctx.prevEntryIndex != NONE_NEXT) {
                 prev = ctx.prevEntryIndex;
                 curr = entrySet.getNextEntryIndex(prev);
+                // entries in chunk are never physically deleted (only during rebalance)
+                // so it is safe to come back to previous entry index
             } else {
                 // start iterating from quickly-found node (by binary search) in sorted part of order-array
                 if (anchor == INVALID_ANCHOR_INDEX) {
