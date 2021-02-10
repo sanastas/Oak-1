@@ -90,6 +90,7 @@ public class OakMapBuilder<K, V> {
     }
 
     public OakMap<K, V> build() {
+        System.out.println("Oak with no double checking!");
         if (preferredBlockSizeBytes != null) {
             BlocksPool.preferBlockSize(preferredBlockSizeBytes);
         }

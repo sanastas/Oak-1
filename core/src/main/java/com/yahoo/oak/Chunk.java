@@ -274,8 +274,10 @@ class Chunk<K, V> {
     void lookUp(ThreadContext ctx, K key) {
         // binary search sorted part of key array to quickly find node to start search at
         // it finds previous-to-key
-        int curr = binaryFind(ctx.tempKey, key);
-        curr = (curr == NONE_NEXT) ? entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(curr);
+        ctx.prevEntryIndex = binaryFind(ctx.tempKey, key);
+        // if prevEntryIndex is irrelevant it is going to be NONE_NEXT
+        int curr = (ctx.prevEntryIndex == NONE_NEXT) ?
+            entrySet.getHeadNextIndex() : entrySet.getNextEntryIndex(ctx.prevEntryIndex);
 
         // iterate until end of list (or key is found)
         while (curr != NONE_NEXT) {
@@ -294,10 +296,11 @@ class Chunk<K, V> {
                 entrySet.readValue(ctx);
                 return;
             }
+            ctx.prevEntryIndex = curr; // remeber one before current
             // otherwise- proceed to next item
             curr = entrySet.getNextEntryIndex(curr);
-        }
 
+        }
         // Reset entry context to be INVALID
         ctx.invalidate();
     }
@@ -420,21 +423,28 @@ class Chunk<K, V> {
         int anchor = INVALID_ANCHOR_INDEX;
         final int ei = ctx.entryIndex;
         final KeyBuffer tempKeyBuff = ctx.tempKey;
+
         while (true) {
-            // start iterating from quickly-found node (by binary search) in sorted part of order-array
-            if (anchor == INVALID_ANCHOR_INDEX) {
-                anchor = binaryFind(tempKeyBuff, key);
-            }
-            if (anchor == NONE_NEXT) {
-                prev = NONE_NEXT;
-                curr = entrySet.getHeadNextIndex();
+            // Optimization: try to insert directly after the previously found previous
+            if (ctx.prevEntryIndex != NONE_NEXT) {
+                prev = ctx.prevEntryIndex;
+                curr = entrySet.getNextEntryIndex(prev);
+                // entries in chunk are never physically deleted (only during rebalance)
+                // so it is safe to come back to previous entry index
             } else {
-                prev = anchor;
-                curr = entrySet.getNextEntryIndex(anchor);    // index of next item in list
+                // start iterating from quickly-found node (by binary search) in sorted part of order-array
+                if (anchor == INVALID_ANCHOR_INDEX) {
+                    anchor = binaryFind(tempKeyBuff, key);
+                }
+                if (anchor == NONE_NEXT) {
+                    prev = NONE_NEXT;
+                    curr = entrySet.getHeadNextIndex();
+                } else {
+                    prev = anchor;
+                    curr = entrySet.getNextEntryIndex(anchor);    // index of next item in list
+                }
             }
 
-            //TODO: use ctx and location window inside ctx (when key wasn't found),
-            //TODO: so there us no need to iterate again in linkEntry
             // iterate items until key's position is found
             while (true) {
                 // if no item, done searching - add to end of list
