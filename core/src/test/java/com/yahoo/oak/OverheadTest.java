@@ -34,6 +34,12 @@ public class OverheadTest {
 
     @Test
     public void main() {
+
+        long heapSizeBefore = Runtime.getRuntime().totalMemory(); // Get current size of heap in bytes
+        long heapFreeSizeBefore = Runtime.getRuntime().freeMemory();
+        double usedHeapMemoryMBBefore = (double) (heapSizeBefore - heapFreeSizeBefore) / M;
+        double usedOffHeapMemoryMBBefore = (double) (oak.getValuesMemoryManager().allocated()) / M;
+
         Random r = new Random();
         for (int i = 0; i < (int) Math.round(NUM_OF_ENTRIES * 0.5); ) {
             Integer key = r.nextInt(NUM_OF_ENTRIES);
@@ -50,7 +56,17 @@ public class OverheadTest {
         double usedOffHeapMemoryMB = (double) (oak.getValuesMemoryManager().allocated()) / M;
 
         double heapOverhead = usedHeapMemoryMB / (usedHeapMemoryMB + usedOffHeapMemoryMB);
-        System.out.println("Observed On Heap Overhead: " + heapOverhead);
+        System.out.println("Observed On Heap Overhead: " + heapOverhead + "\n" +
+            "-------------------------------------------------------------\n" +
+            "Total Memory Before " + heapSizeBefore + "   ||  Total Memory After " + heapSize + "\n" +
+            "Free Memory Before " + heapFreeSizeBefore + "||  Free Memory After " + heapFreeSize
+            + "\n" +
+            "Used Heap Memory Before in MB " + usedHeapMemoryMBBefore
+            + "||  Used Heap Memory After in MB " + usedHeapMemoryMB + "\n" +
+            "Used Off-Heap Memory Before in MB " + usedOffHeapMemoryMBBefore
+            + "||  Used Off-Heap Memory After in MB " + usedOffHeapMemoryMB + "\n" +
+            "-------------------------------------------------------------\n");
+
         assert heapOverhead < MAX_ON_HEAP_OVERHEAD_PERCENTAGE;
     }
 }
